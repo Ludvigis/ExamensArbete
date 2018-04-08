@@ -77,7 +77,7 @@ public class FeatureExtractor {
         return img;
     }
 
-    public Mat[] findSign(Mat img , Scalar lowerBound, Scalar upperBound) {
+    public Mat findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {
         //prepare different output
         //Mat hsv = img.clone(); //hsv tresholded image
         //Mat warped = img.clone(); //perspective warped image
@@ -111,8 +111,7 @@ public class FeatureExtractor {
             double area = Imgproc.contourArea(contour);
             if(area > maxArea) {
                 MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
-                Imgproc.approxPolyDP(curve, approxCurve, 0.04*
-                        Imgproc.arcLength(curve, true), true);
+                Imgproc.approxPolyDP(curve, approxCurve, 0.04 * Imgproc.arcLength(curve, true), true);
                 if(approxCurve.total() == 4) {
                     maxArea = area;
                     maxAreaIndex = i;
@@ -170,11 +169,25 @@ public class FeatureExtractor {
         //Imgproc.resize(imgCon, imgCon, new Size(500,500));
         //Imgproc.resize(hsv, hsv, new Size(500,500));
         //Imgproc.resize(warped, warped, new Size(500,500));
-        Mat res[] = {imgCon,hsv,warped};
-        return res;
+
+        switch (drawMode){
+            case IMAGE:
+                return imgCon;
+
+            case HSV:
+                return hsv;
+
+
+            case WARPED:
+                return warped;
+
+            default:
+                return null;//return img instead?
+        }
+
     }
 
-    //TODO bottom left corner sometimes on top of top right corner...
+    //TODO bottom left corner sometimes on top of top right corner... seems to happen when bottom left corner is close to top right side...
     private Mat sortCorners(List<Point> corners) {
         double minSum = Double.MAX_VALUE;
         double maxSum = Double.MIN_VALUE;
