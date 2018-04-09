@@ -1,5 +1,7 @@
 package com.example.ludvig.examensarbete;
 
+import android.util.Log;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -78,9 +80,6 @@ public class FeatureExtractor {
     }
 
     public Mat findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {
-        //prepare different output
-        //Mat hsv = img.clone(); //hsv tresholded image
-        //Mat warped = img.clone(); //perspective warped image
         Imgproc.cvtColor(img, hsv, Imgproc.COLOR_BGR2HSV);
         Core.inRange(hsv, lowerBound, upperBound, hsv);
         Imgproc.morphologyEx(hsv, hsv,
@@ -99,10 +98,12 @@ public class FeatureExtractor {
         MatOfPoint contour = null;
         MatOfPoint2f approxCurve = new MatOfPoint2f();
 
-        Mat imgCon = img.clone();   //TODO remove for performance? use drawmode to only draw useful stuff
+        //Mat imgCon = img.clone();   //TODO remove for performance? use drawmode to only draw useful stuff
 
-        //TODO remove draw contours?
-        Imgproc.drawContours(imgCon, contours, -1, new Scalar(255,0,0),3);
+        if(drawMode ==DrawMode.IMAGE){
+            Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),3);
+        }
+
 
         //TODO try finding x biggest contour and then check if there is a square...
 
@@ -120,7 +121,9 @@ public class FeatureExtractor {
             }
         }
         if(maxCurve.total() == 4) {
-            Imgproc.drawContours(imgCon, contours, maxAreaIndex, new Scalar(0,255,0),3);
+            if(drawMode == DrawMode.IMAGE){
+                Imgproc.drawContours(img, contours, maxAreaIndex, new Scalar(0,255,0),3);
+            }
             double[] corner1 = maxCurve.get(0, 0);
             Point p1 = new Point(corner1[0],corner1[1]);
 
@@ -140,17 +143,16 @@ public class FeatureExtractor {
             cornerList.add(p4);
 
             Mat corners = sortCorners(cornerList);
-
-            //TODO remove for performance?
-            Imgproc.putText(imgCon, "Top L", new Point(corners.get(0, 0)),
-                    Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0,0,255),5);
-            Imgproc.putText(imgCon, "Top R", new Point(corners.get(1, 0)),
-                    Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0,0,255),5);
-            Imgproc.putText(imgCon, "Bot R", new Point(corners.get(2, 0)),
-                    Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0,0,255),5);
-            Imgproc.putText(imgCon, "Bot L", new Point(corners.get(3, 0)),
-                    Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0,0,255),5);
-
+            if(drawMode == DrawMode.IMAGE) {
+                Imgproc.putText(img, "Top L", new Point(corners.get(0, 0)),
+                        Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+                Imgproc.putText(img, "Top R", new Point(corners.get(1, 0)),
+                        Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+                Imgproc.putText(img, "Bot R", new Point(corners.get(2, 0)),
+                        Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+                Imgproc.putText(img, "Bot L", new Point(corners.get(3, 0)),
+                        Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+            }
             //new result of img.width x img.height resolution...
             Point topLeft = new Point(0,0);
             Point topRight = new Point(img.width(),0);
@@ -172,7 +174,7 @@ public class FeatureExtractor {
 
         switch (drawMode){
             case IMAGE:
-                return imgCon;
+                return img;      //remove imgCon and use img instead... ?
 
             case HSV:
                 return hsv;
@@ -187,12 +189,12 @@ public class FeatureExtractor {
 
     }
 
-    //TODO bottom left corner sometimes on top of top right corner... seems to happen when bottom left corner is close to top right side...
+
     private Mat sortCorners(List<Point> corners) {
         double minSum = Double.MAX_VALUE;
         double maxSum = Double.MIN_VALUE;
-        double minDiff = 0.0;
-        double maxDiff = 0.0;
+        double minDiff = Double.MAX_VALUE;   //double min val || double max val
+        double maxDiff = Double.MIN_VALUE;
         int topLeftIndex = 0;
         int topRightIndex = 0;
         int bottomRightIndex = 0;
@@ -200,7 +202,8 @@ public class FeatureExtractor {
         for(int i = 0; i< corners.size();i++) {
             Point corner = corners.get(i);
             double sum = corner.x + corner.y;
-            double diff = corner.y - corner.x;
+            //double diff = corner.y - corner.x;
+            double diff = corner.x - corner.y;
             if(sum > maxSum) {
                 maxSum = sum;
                 bottomRightIndex = i;
@@ -211,11 +214,12 @@ public class FeatureExtractor {
             }
             if(diff > maxDiff) {
                 maxDiff = diff;
-                bottomLeftIndex = i;
+                topRightIndex = i;
+
             }
             if(diff < minDiff) {
                 minDiff = diff;
-                topRightIndex = i;
+                bottomLeftIndex = i;
             }
         }
         List<Point> sortedList = new ArrayList<Point>();
