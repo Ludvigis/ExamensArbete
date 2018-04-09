@@ -105,9 +105,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
 
         Mat res = featureExtractor.findSign(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal), drawMode);
-        //return featureExtractor.detectShapeCountCurve(res[2]);
-        //return featureExtractor.detectShapeCountCurve(frame.rgba());
-        return res;
+        return featureExtractor.detectShapeCountCurve(res);
+        //return res;
 
         //return imgMat;
     }

@@ -45,12 +45,12 @@ public class FeatureExtractor {
             Rect rect = Imgproc.boundingRect(contours.get(i));
             int centerX = rect.x + rect.width/2;
             int centerY = rect.y + rect.height/2;
-//marks center
-            Imgproc.circle(edges,new Point(centerX,centerY),8,new Scalar(0,0,0),-1);
-            Imgproc.circle(edges,new Point(centerX,centerY),4,new Scalar(255,255,255),-1);
-//writes out contour integer.
-            Imgproc.putText(edges, Integer.toString(i), new Point(centerX +
-                    10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(255,100,255));
+            //marks center
+            //Imgproc.circle(edges,new Point(centerX,centerY),8,new Scalar(0,0,0),-1);
+            //Imgproc.circle(edges,new Point(centerX,centerY),4,new Scalar(255,255,255),-1);
+
+            //writes out contour integer.
+            //Imgproc.putText(edges, Integer.toString(i), new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(255,100,255));
             MatOfPoint c = contours.get(i);
             curve.fromList(c.toList());
 
@@ -58,15 +58,19 @@ public class FeatureExtractor {
                     Imgproc.arcLength(curve, true), true);
             if(approxCurve.total() == 3) {
                 System.out.println(i + ": " + " Triangel");
+                Imgproc.putText(img,"T", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
             }else if(approxCurve.total() == 4) {
                 System.out.println(i + ": " + " Fyrkant");
+                Imgproc.putText(img,"S", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
             }else if(approxCurve.total() > 7) {
                 System.out.println(i + ": " + " Cirkel");
+                Imgproc.putText(img,"C", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
             }else {
                 System.out.println(i + ": " + approxCurve.total());
+
             }
         }
-        return edges;
+        return img;
     }
     public Mat detectShapeShapeFactor(Mat img){
         Mat edges = new Mat();
