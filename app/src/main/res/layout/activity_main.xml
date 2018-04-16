@@ -23,148 +23,218 @@
         android:layout_alignParentRight="true"
         android:text="Menu" />
 
-    <android.support.v7.widget.LinearLayoutCompat
-        android:id="@+id/menu_layout"
+    <ScrollView
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
-        android:layout_below="@id/menu_button"
-        android:orientation="vertical"
-        android:alpha="0.5"
-        android:background="#000000"
-        android:visibility="visible">
-
-        <Spinner
-            android:id="@+id/spinner_drawmode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="visible"
-            android:background="#ffffff"/>
+        android:layout_below="@id/menu_button">
 
         <android.support.v7.widget.LinearLayoutCompat
+            android:id="@+id/menu_layout"
             android:layout_width="match_parent"
-            android:layout_height="35dp">
+            android:layout_height="match_parent"
 
-            <TextView
-                android:id="@+id/hLow_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
+            android:orientation="vertical"
+            android:alpha="0.5"
+            android:background="#000000"
+            android:visibility="visible">
 
-            <SeekBar
-                android:id="@+id/hLow_seekBar"
+
+
+            <Spinner
+                android:id="@+id/spinner_drawmode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="0" />
+                android:visibility="visible"
+                android:background="#ffffff"/>
 
-        </android.support.v7.widget.LinearLayoutCompat>
-
-
-        <android.support.v7.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="35dp">
-
-            <TextView
-                android:id="@+id/sLow_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
-
-            <SeekBar
-                android:id="@+id/sLow_seekBar"
+            <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="0" />
+                android:layout_height="35dp">
 
-        </android.support.v7.widget.LinearLayoutCompat>
+                <TextView
+                    android:id="@+id/hLow_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
 
-        <android.support.v7.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="35dp">
+                <SeekBar
+                    android:id="@+id/hLow_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="0" />
 
-            <TextView
-                android:id="@+id/vLow_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
+            </android.support.v7.widget.LinearLayoutCompat>
 
-            <SeekBar
-                android:id="@+id/vLow_seekBar"
+
+            <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="67" />
+                android:layout_height="35dp">
 
-        </android.support.v7.widget.LinearLayoutCompat>
+                <TextView
+                    android:id="@+id/sLow_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
 
+                <SeekBar
+                    android:id="@+id/sLow_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="0" />
 
-        <android.support.v7.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="35dp">
+            </android.support.v7.widget.LinearLayoutCompat>
 
-            <TextView
-                android:id="@+id/hHigh_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
-
-            <SeekBar
-                android:id="@+id/hHigh_seekBar"
+            <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="255" />
+                android:layout_height="35dp">
 
-        </android.support.v7.widget.LinearLayoutCompat>
+                <TextView
+                    android:id="@+id/vLow_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
 
-        <android.support.v7.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="35dp">
+                <SeekBar
+                    android:id="@+id/vLow_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="67" />
 
-            <TextView
-                android:id="@+id/sHigh_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
+            </android.support.v7.widget.LinearLayoutCompat>
 
-            <SeekBar
-                android:id="@+id/sHigh_seekBar"
+
+            <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="59" />
+                android:layout_height="35dp">
 
+                <TextView
+                    android:id="@+id/hHigh_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
 
-        </android.support.v7.widget.LinearLayoutCompat>
+                <SeekBar
+                    android:id="@+id/hHigh_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="255" />
 
-        <android.support.v7.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="35dp">
+            </android.support.v7.widget.LinearLayoutCompat>
 
-            <TextView
-                android:id="@+id/vHigh_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textColor="#ffffff" />
-
-            <SeekBar
-                android:id="@+id/vHigh_seekBar"
+            <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="255" />
+                android:layout_height="35dp">
+
+                <TextView
+                    android:id="@+id/sHigh_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
+
+                <SeekBar
+                    android:id="@+id/sHigh_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="59" />
+
+
+            </android.support.v7.widget.LinearLayoutCompat>
+
+            <android.support.v7.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="35dp">
+
+                <TextView
+                    android:id="@+id/vHigh_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
+
+                <SeekBar
+                    android:id="@+id/vHigh_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="255"
+                    android:progress="255" />
+
+            </android.support.v7.widget.LinearLayoutCompat>
+
+
+            <android.support.v7.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="35dp">
+
+                <TextView
+                    android:id="@+id/cannyLowText_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
+
+                <SeekBar
+                    android:id="@+id/cannyLow_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="300"
+                    android:progress="70" />
+
+            </android.support.v7.widget.LinearLayoutCompat>
+
+            <android.support.v7.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="35dp">
+
+                <TextView
+                    android:id="@+id/cannyHighText_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
+
+                <SeekBar
+                    android:id="@+id/cannyHigh_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="1000"
+                    android:progress="420" />
+
+            </android.support.v7.widget.LinearLayoutCompat>
+
+            <android.support.v7.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="35dp">
+
+                <TextView
+                    android:id="@+id/epsilon_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="000"
+                    android:textColor="#ffffff" />
+
+                <SeekBar
+                    android:id="@+id/epsilon_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="10"
+                    android:progress="4" />
+
+            </android.support.v7.widget.LinearLayoutCompat>
+
 
         </android.support.v7.widget.LinearLayoutCompat>
-
-    </android.support.v7.widget.LinearLayoutCompat>
+    </ScrollView>
 
 
 </android.widget.RelativeLayout>

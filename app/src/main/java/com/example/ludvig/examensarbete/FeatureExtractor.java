@@ -16,6 +16,7 @@ import org.opencv.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by ludvig on 2018-04-04.
@@ -24,66 +25,143 @@ import java.util.List;
 public class FeatureExtractor {
     private Mat hsv;
     private Mat warped;
+
+    private static final String TAG = "featureExtractor";
     public FeatureExtractor(){
         hsv = new Mat();
         warped = new Mat();
     }
 
-    public Mat detectShapeCountCurve(Mat img) {
+    public Mat extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
+        Mat[] sign = findSign(img,lowerbound,upperbound, drawmode);
+        Mat warped = sign[2];
+        Vector<Features> shapes = detectShape(warped,cannyLow,cannyHigh,epsilon);
+        for(int i = 0; i<shapes.size();i++){
+            Features shape = shapes.get(i);
+            shape.color = detectColor(warped,shape.centerPoint);
+            shape.quadrant = findQuadrants(warped,shape.centerPoint);
+            Log.i(TAG,String.valueOf(shapes.size()));
+            Log.i(TAG,shape.color + " " + shape.shape + " in " + shape.quadrant);
+            Imgproc.putText(warped,String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+
+        }
+        switch (drawmode) {
+            case IMAGE:
+                return sign[0];
+
+            case HSV:
+                return hsv;
+
+            case WARPED:
+                Imgproc.resize(warped,warped,img.size());
+                return warped;
+
+
+            default:
+                return img;
+        }
+
+
+        //return sign;
+
+    }
+
+    private String findQuadrants(Mat img,Point centerPoint){  //multiple points?  or array of feature objects...
+        int width = img.cols();
+        int height = img.rows();
+
+        if(centerPoint.x < width / 2 && centerPoint.y < height/2){  //top left quadrant
+            return "Top left quadrant";
+        }
+        else if(centerPoint.x > width / 2 && centerPoint.y < height/2){  //top right quadrant
+            return "Top right quadrant";
+        }
+        else if(centerPoint.x < width / 2 && centerPoint.y > height/2){     //bottom left quadrant
+            return "Bottom left quadrant";
+        }
+        else{                                                               //bottom right quadrant
+            return "Bottom right quadrant";
+        }
+    }
+
+    private String detectColor(Mat img, Point centerPoint){
+
+        //TODO hsv in range på 1 px matris?
+
+        double colors[] = img.get((int)centerPoint.x,(int)centerPoint.y);
+        if(colors != null){
+            if(colors[0] > 150){
+                return "Red";
+            }
+            if(colors[2]>100){
+                return "Blue";
+            }
+            else{
+                return "unknown color";
+            }
+        }
+
+        return "unknown color";
+    }
+
+
+    public Vector<Features> detectShape(Mat img, int cannyLow, int cannyHigh, double epsilon) {
+        Vector<Features> resultVector = new Vector<Features>();
+
         Mat edges = new Mat();
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
-        Imgproc.Canny(img, edges, 100, 300);
-//Imgproc.blur(edges, edges, new Size(2, 2));
+        Imgproc.Canny(img, edges, cannyLow, cannyHigh);     //100, 300 cannyLow and High
+        //Imgproc.blur(edges, edges, new Size(2, 2));
         Imgproc.findContours(edges, contours, hierarchy,
                 Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-//third argument negative = draw all contours...
-        Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),5);
+        //third argument negative = draw all contours...
+        Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),2);
         MatOfPoint2f approxCurve = new MatOfPoint2f();
         MatOfPoint2f curve = new MatOfPoint2f();
         for (int i = 0; i < contours.size(); i++) {
             Rect rect = Imgproc.boundingRect(contours.get(i));
             int centerX = rect.x + rect.width/2;
             int centerY = rect.y + rect.height/2;
-            //marks center
-            //Imgproc.circle(edges,new Point(centerX,centerY),8,new Scalar(0,0,0),-1);
-            //Imgproc.circle(edges,new Point(centerX,centerY),4,new Scalar(255,255,255),-1);
 
-            //writes out contour integer.
-            //Imgproc.putText(edges, Integer.toString(i), new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(255,100,255));
             MatOfPoint c = contours.get(i);
             curve.fromList(c.toList());
 
-            Imgproc.approxPolyDP(curve, approxCurve, 0.02*
+            Imgproc.approxPolyDP(curve, approxCurve, epsilon*
                     Imgproc.arcLength(curve, true), true);
-            if(approxCurve.total() == 3) {
-                System.out.println(i + ": " + " Triangel");
-                Imgproc.putText(img,"T", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
-            }else if(approxCurve.total() == 4) {
-                System.out.println(i + ": " + " Fyrkant");
-                Imgproc.putText(img,"S", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
-            }else if(approxCurve.total() > 7) {
-                System.out.println(i + ": " + " Cirkel");
-                Imgproc.putText(img,"C", new Point(centerX + 10,centerY), Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0,0,0));
-            }else {
-                System.out.println(i + ": " + approxCurve.total());
 
+            if(approxCurve.total()>=3){
+                Imgproc.circle(img, new Point(centerX,centerY),1,new Scalar(0,255,0),5);
+            }
+            if(approxCurve.total() == 3) {
+                Features f = new Features();
+                f.shape = "Triangle";
+                f.shapeCount = 3;
+                f.centerPoint = new Point(centerX,centerY);
+                resultVector.add(f);
+
+            }else if(approxCurve.total() == 4) {
+                Features f = new Features();
+                f.shape = "Square";
+                f.centerPoint = new Point(centerX,centerY);
+                f.shapeCount = 4;
+
+                resultVector.add(f);
+
+            }else if(approxCurve.total() > 7) {
+                Features f = new Features();
+                f.shape = "Circle";
+                f.shapeCount = (int)approxCurve.total();
+                f.centerPoint = new Point(centerX,centerY);
+
+                resultVector.add(f);
             }
         }
-        return img;
-    }
-    public Mat detectShapeShapeFactor(Mat img){
-        Mat edges = new Mat();
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        Mat hierarchy = new Mat();
-        Imgproc.Canny(img, edges, 100, 300);
-//Imgproc.blur(edges, edges, new Size(2, 2));
-        Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_LIST,
-                Imgproc.CHAIN_APPROX_SIMPLE);
-        return img;
+        return resultVector;
     }
 
-    public Mat findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {
+    public Mat[] findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {
+        //Mat warped = new Mat();
         Imgproc.cvtColor(img, hsv, Imgproc.COLOR_BGR2HSV);
         Core.inRange(hsv, lowerBound, upperBound, hsv);
         Imgproc.morphologyEx(hsv, hsv,
@@ -101,13 +179,9 @@ public class FeatureExtractor {
         MatOfPoint2f maxCurve = new MatOfPoint2f();
         MatOfPoint contour = null;
         MatOfPoint2f approxCurve = new MatOfPoint2f();
-
-        //Mat imgCon = img.clone();   //TODO remove for performance? use drawmode to only draw useful stuff
-
         if(drawMode ==DrawMode.IMAGE){
             Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),3);
         }
-
 
         //TODO try finding x biggest contour and then check if there is a square...
 
@@ -157,11 +231,17 @@ public class FeatureExtractor {
                 Imgproc.putText(img, "Bot L", new Point(corners.get(3, 0)),
                         Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
             }
-            //new result of img.width x img.height resolution...
+            //new result of size width and height
+            int borderOffset = 20;
+            int width = calcWidth(corners, borderOffset);
+            int height = calcHeight(corners,borderOffset);
+            //int width = img.width();
+            //int height = img.height();
+
             Point topLeft = new Point(0,0);
-            Point topRight = new Point(img.width(),0);
-            Point bottomRight = new Point(img.width(),img.height());
-            Point bottomLeft = new Point(0,img.height());
+            Point topRight = new Point(width,0);
+            Point bottomRight = new Point(width,height);
+            Point bottomLeft = new Point(0,height);
             List<Point> dimensionList = new ArrayList<Point>();
             dimensionList.add(topLeft);
             dimensionList.add(topRight);
@@ -169,30 +249,59 @@ public class FeatureExtractor {
             dimensionList.add(bottomLeft);
             Mat dimensions = Converters.vector_Point2f_to_Mat(dimensionList);
             Mat perspectiveTransform = Imgproc.getPerspectiveTransform(corners,dimensions);
-            Imgproc.warpPerspective(img, warped, perspectiveTransform, new Size(img.width(),img.height()),Imgproc.INTER_CUBIC);     //TODO change to smaller size;
-        }
-        //Imgproc.resize(img, img, new Size(500,500));
-        //Imgproc.resize(imgCon, imgCon, new Size(500,500));
-        //Imgproc.resize(hsv, hsv, new Size(500,500));
-        //Imgproc.resize(warped, warped, new Size(500,500));
 
-        switch (drawMode){
+            Imgproc.warpPerspective(img, warped, perspectiveTransform, new Size(width,height),Imgproc.INTER_CUBIC);
+        }
+
+        return new Mat[]{img,hsv,warped};
+
+        /*switch (drawMode){
             case IMAGE:
                 return img;      //remove imgCon and use img instead... ?
 
             case HSV:
                 return hsv;
 
-
             case WARPED:
                 return warped;
 
             default:
                 return null;//return img instead?
-        }
+        }*/
 
     }
 
+    private int calcWidth(Mat corners, int cropBorder){
+        double[] tl = corners.get(0,0);
+        double[] tr = corners.get(1,0);
+        double[] br = corners.get(2,0);
+        double[] bl = corners.get(3,0);
+
+        int w1 = (int)Math.sqrt(Math.pow(br[0]-bl[0],2) + Math.pow(br[1]-bl[1],2)) - cropBorder;
+        int w2 = (int)Math.sqrt(Math.pow(tr[0]-tl[0],2) + Math.pow(tr[1]-tl[1],2))- cropBorder;
+
+        if(w1 < w2){
+            return (w1>0)?w1 :1;
+        }else{
+            return (w2>0)?w2 :1;
+        }
+    }
+
+    private int calcHeight(Mat corners,int cropBorder){
+        double[] tl = corners.get(0,0);
+        double[] tr = corners.get(1,0);
+        double[] br = corners.get(2,0);
+        double[] bl = corners.get(3,0);
+
+        int h1 = (int)Math.sqrt(Math.pow(tr[0]-br[0],2) + Math.pow(tr[1]-br[1],2)) - cropBorder;
+        int h2 = (int)Math.sqrt(Math.pow(tl[0]-bl[0],2) + Math.pow(tl[1]-bl[1],2)) - cropBorder;
+
+        if(h1 < h2){
+            return (h1>0)?h1:1;
+        }else{
+            return (h2>0)?h2:1;
+        }
+    }
 
     private Mat sortCorners(List<Point> corners) {
         double minSum = Double.MAX_VALUE;
@@ -234,6 +343,4 @@ public class FeatureExtractor {
         Mat sortedCorners = Converters.vector_Point2f_to_Mat(sortedList);
         return sortedCorners;
     }
-
-
 }

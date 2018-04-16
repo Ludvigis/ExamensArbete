@@ -23,6 +23,8 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     JavaCameraView cameraView;
@@ -41,6 +43,14 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     TextView hHighText;
     TextView sHighText;
     TextView vHighText;
+
+    TextView cannyLow;
+    TextView cannyHigh;
+    int cannyLowVal;
+    int cannyHighVal;
+
+    TextView epsilonText;
+    Double epsilonVal;
 
     DrawMode drawMode = DrawMode.IMAGE;
 
@@ -83,8 +93,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         cameraView.setCvCameraViewListener(this);
 
         initGUI();
-
-
     }
 
     private void setWindowMode(){
@@ -103,17 +111,32 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
+        /*Mat img = frame.rgba();
+        Mat edges = new Mat();
+        Imgproc.Canny(img,edges,cannyLowVal,cannyHighVal);
+        return edges;*/
+        //TODO remove drawmode for warped?
+        return featureExtractor.extractFeatures(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal),cannyLowVal,cannyHighVal,epsilonVal, drawMode);
 
-        Mat res = featureExtractor.findSign(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal), drawMode);
-        return featureExtractor.detectShapeCountCurve(res);
-        //return res;
-
-        //return imgMat;
     }
 
     @Override
     public void onCameraViewStopped(){
 
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(cameraView != null)
+            cameraView.disableView();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(cameraView!=null)
+            cameraView.disableView();
     }
 
     @Override
@@ -279,13 +302,88 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         sHighText.setText(String.valueOf(sHigh.getProgress()));
         vHighText.setText(String.valueOf(vHigh.getProgress()));
 
-
         hLowVal = hLow.getProgress();
         sLowVal = sLow.getProgress();
         vLowVal = vLow.getProgress();
         hHighVal = hHigh.getProgress();
         sHighVal = sHigh.getProgress();
         vHighVal = vHigh.getProgress();
+
+
+
+        //Canny
+        SeekBar cLow = findViewById(R.id.cannyLow_seekBar);
+        SeekBar cHigh = findViewById(R.id.cannyHigh_seekBar);
+
+        cannyLow = findViewById(R.id.cannyLowText_view);
+        cannyHigh = findViewById(R.id.cannyHighText_view);
+
+        cannyLow.setText(String.valueOf(cLow.getProgress()));
+        cannyHigh.setText(String.valueOf(cHigh.getProgress()));
+
+        cLow.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                cannyLow.setText(String.valueOf(i));
+                cannyLowVal = i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        cHigh.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                cannyHigh.setText(String.valueOf(i));
+                cannyHighVal = i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        cannyLowVal = cLow.getProgress();
+        cannyHighVal = cHigh.getProgress();
+
+
+        //epsilon
+
+        SeekBar epsilon = findViewById(R.id.epsilon_seekBar);
+        epsilonText = findViewById(R.id.epsilon_textView);
+        epsilonText.setText(String.valueOf((double)epsilon.getProgress()/100));
+        epsilon.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                epsilonVal = (double)i / 100;
+                epsilonText.setText(String.valueOf(epsilonVal));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        epsilonVal = (double)epsilon.getProgress() / 100;
+
 
     }
 
