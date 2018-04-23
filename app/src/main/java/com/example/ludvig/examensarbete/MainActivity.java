@@ -111,6 +111,18 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             mem.loadPersistentMem(this);
             mem.loadPersistentExp(this);
 
+           /* Sign s = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
+            Node n = new Node(s,s,"n");
+            for(int i = 0; i < 10; i++){
+                n.addEpisodeToExperience(s.getEpisodeVector());
+            }
+            mem.savePersistentExp(this);
+            mem.savePersistentMem(this);
+*
+*/
+
+
+
         } catch (ClassNotFoundException e) {
             Log.e(TAG,"class not found", e);
         } catch (IOException e) {

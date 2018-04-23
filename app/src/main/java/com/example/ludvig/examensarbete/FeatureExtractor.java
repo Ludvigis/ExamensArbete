@@ -95,7 +95,10 @@ public class FeatureExtractor {
             Node best = node.checkForBestRewardMatch();
             if(best!=null){
                 Log.d("ResultFeature",best.getName());
+
+                Imgproc.putText(signMat[0],best.getName(),new Point(signMat[0].width()/2,signMat[0].height() - 100),Core.FONT_HERSHEY_SIMPLEX,2.0,new Scalar(0,255,0),5);
             }
+
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -208,7 +211,7 @@ public class FeatureExtractor {
         if(img.channels() < 3){     //img is empty
             return ;
         }
-        Scalar lower_blue = new Scalar(80,115,180);
+        Scalar lower_blue = new Scalar(80,70,130);         //Scalar lower_blue = new Scalar(80,115,180);
         Scalar upper_blue = new Scalar(150,255,255);
         Scalar lower_red = new Scalar(150,30,180);
         Scalar upper_red = new Scalar(180,255,255);
@@ -222,7 +225,8 @@ public class FeatureExtractor {
         Core.inRange(hsv,lower_red,upper_red,redMask);
 
 
-        for(int i = 0; i < features.size();i++){
+
+        for(int i = features.size()-1; i>=0; i--){
             Features f = features.get(i);
             Point centerPoint = f.centerPoint;
             int x = (int)centerPoint.y; //TODO swap back x and y and change places in .get(x,y) to (y,x)
@@ -240,6 +244,8 @@ public class FeatureExtractor {
             }else if(redMask.get(x,y)!= null && redMask.get(x,y)[0] > 0){
                 f.color = "red";
                 Log.d("colorDet", "Red detected!");
+            }else{
+                features.remove(i);     //TODO loop backwards and remove...
             }
 
         }
