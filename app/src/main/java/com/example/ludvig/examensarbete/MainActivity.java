@@ -3,6 +3,7 @@ package com.example.ludvig.examensarbete;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -25,6 +26,9 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+
+import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     JavaCameraView cameraView;
@@ -54,7 +58,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     DrawMode drawMode = DrawMode.IMAGE;
 
-    private static final String TAG = "main activity";
+    private static final String TAG = "main_activity";
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -75,6 +79,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setWindowMode();
         setContentView(R.layout.activity_main);
@@ -93,6 +98,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         cameraView.setCvCameraViewListener(this);
 
         initGUI();
+        //File f = new File("/storage/MEM_EXP");
+        //Log.d(TAG,f.getAbsolutePath());
+        try {
+            Memory mem = Memory.getInstance();
+            mem.savePersistentExp(this);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void setWindowMode(){
@@ -115,7 +131,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         Mat edges = new Mat();
         Imgproc.Canny(img,edges,cannyLowVal,cannyHighVal);
         return edges;*/
-        //TODO remove drawmode for warped?
         return featureExtractor.extractFeatures(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal),cannyLowVal,cannyHighVal,epsilonVal, drawMode);
 
     }
