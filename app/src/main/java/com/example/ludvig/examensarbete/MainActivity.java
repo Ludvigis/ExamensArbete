@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -102,7 +103,12 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         //Log.d(TAG,f.getAbsolutePath());
         try {
             Memory mem = Memory.getInstance();
-            mem.savePersistentExp(this);
+            mem.loadPersistentMem(this);
+            mem.loadPersistentExp(this);
+            String s = String.valueOf(VSA.hammingDist(mem.find(HDVECTOR.aboveBelow),mem.find(HDVECTOR.Cb)));
+
+            Toast.makeText(this,s, Toast.LENGTH_LONG).show();
+            Log.i("fdsa",s);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
