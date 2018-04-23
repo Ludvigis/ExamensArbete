@@ -68,7 +68,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
                     cameraView.enableView();
-                    featureExtractor = new FeatureExtractor();
+                    try {
+                        featureExtractor = new FeatureExtractor();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
                 } break;
                 default:
                 {
@@ -124,6 +130,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     public void onCameraViewStarted(int width, int height) {
         imgMat = new Mat();
+
         //create featureExtractor with width and height?
     }
 

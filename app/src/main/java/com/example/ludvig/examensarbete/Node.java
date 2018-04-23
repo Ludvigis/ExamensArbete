@@ -1,5 +1,7 @@
 package com.example.ludvig.examensarbete;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -23,30 +25,18 @@ public class Node {
 		Memory mem = Memory.getInstance();
 		double left = 1;
 		double right = 1;
-			left = VSA.hammingDist(VSA.binding(mem.getExperienceVector(), leftSign.getEpisodeVector()), mem.find(HDVECTOR.REWARD));
-			right = VSA.hammingDist(VSA.binding(mem.getExperienceVector(), rightSign.getEpisodeVector()), mem.find(HDVECTOR.REWARD)); 
-		
-		System.out.println("LEFT HAMMINGDIST: "+ left + " RIGHT HAMMINGDIST: "+ right);
+		Vector leftV = leftSign.getEpisodeVector();
+		Vector rightV = rightSign.getEpisodeVector();
+		if(leftV == null || rightV ==null){
+			return null;
+		}else {
+			left = VSA.hammingDist(VSA.binding(mem.getExperienceVector(), leftV), mem.find(HDVECTOR.REWARD));
+			right = VSA.hammingDist(VSA.binding(mem.getExperienceVector(), rightV), mem.find(HDVECTOR.REWARD));
+		}
+		Log.i("VSANode","LEFT HAMMINGDIST: "+ left + " RIGHT HAMMINGDIST: "+ right);
 		return left < right ? leftPath : rightPath;
 	}
-	
-	public void manualTraining() throws ClassNotFoundException, IOException{
-		Memory mem = Memory.getInstance();
-		System.out.println("LEFT"+ leftSign.toString());
-		System.out.println("RIGHT"+ rightSign.toString());
-		
-		System.out.println("CHOOSE PATH FOR REWARD l/r?");
-		Scanner scnr = new Scanner(System.in);
-		int temp = scnr.nextByte();
-		if(temp == 1){
-			addEpisodeToExperience(leftSign.getEpisodeVector());
-			System.out.println("CHOOSED LEFT");
-		}else if(temp == 2){
-			addEpisodeToExperience(rightSign.getEpisodeVector());
-			System.out.println("COOSED RIGHT");
-		}
-		
-	}
+
 	
 	public void addEpisodeToExperience(Vector episode) throws ClassNotFoundException, IOException{
 		Memory mem = Memory.getInstance();

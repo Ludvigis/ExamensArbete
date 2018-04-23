@@ -1,5 +1,7 @@
 package com.example.ludvig.examensarbete;
 
+import android.util.Log;
+
 import java.io.IOException;
 
 
@@ -11,8 +13,8 @@ public class Sign {
 	private Memory mem;
 
 
-	public Sign(){
-
+	public Sign(Memory mem){
+		this.mem = mem;
 	}
 
 	public Sign(Memory mem,HDVECTOR relation,HDVECTOR firstObj,HDVECTOR secObj, HDVECTOR sameDifferent){
@@ -60,10 +62,15 @@ public class Sign {
 	}
 	
 	public Vector getEpisodeVector() throws IOException{
-		Vector episode = VSA.bundling(mem.find(relation),VSA.binding(mem.find(HDVECTOR.ObjA), mem.find(firstObj)),VSA.binding(mem.find(HDVECTOR.ObjB),mem.find(secObj)),
-				VSA.binding(mem.find(HDVECTOR.sameDifferent),mem.find(sameDifferent)));
-		
-		return episode;
+		if(this.relation != null && this.firstObj != null && this.secObj != null && this.sameDifferent != null){
+			Log.d("BraTagg",mem.keysToString());
+
+			Vector episode = VSA.bundling(mem.find(relation),VSA.binding(mem.find(HDVECTOR.ObjA), mem.find(firstObj)),VSA.binding(mem.find(HDVECTOR.ObjB),mem.find(secObj)),
+					VSA.binding(mem.find(HDVECTOR.sameDifferent),mem.find(sameDifferent)));
+			return episode;
+		}else{
+			return null;
+		}
 	}
 
 }

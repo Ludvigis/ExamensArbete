@@ -1,6 +1,8 @@
 package com.example.ludvig.examensarbete;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import junit.framework.Assert;
 
@@ -16,6 +18,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -27,11 +30,15 @@ import java.util.Vector;
 public class FeatureExtractor {
     private Mat hsv;
     private Mat warped;
+    Memory mem;
+    Context context;
 
     private static final String TAG = "featureExtractor";
-    public FeatureExtractor(){
+    public FeatureExtractor() throws IOException, ClassNotFoundException {
         hsv = new Mat();
         warped = new Mat();
+        mem = Memory.getInstance();
+
     }
 
     public Mat extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
@@ -72,12 +79,29 @@ public class FeatureExtractor {
             Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
         }
 
-        Sign signLeft = new Sign();
-        Sign signRight = new Sign();
+        Sign signLeft = new Sign(mem);
+        Sign signRight = new Sign(mem);
         getSameDifferent(signLeft,signRight,featureSign);
         getAboveBelow(signLeft,signRight,featureSign);
         getShapeVector(signLeft,signRight,featureSign);
 
+        Node node = new Node(signLeft,signRight,"Root");
+        Node node2 = new Node(signLeft,signRight,"left");
+        Node node3 = new Node(signLeft,signRight,"right");
+        node.setLeftPath(node2);
+        node.setRightPath(node3);
+
+        try {
+            Node best = node.checkForBestRewardMatch();
+            if(best!=null){
+                Log.d("ResultFeature",best.getName());
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         Log.d("signTest",signLeft.toString() + "  " + signRight.toString());
 
