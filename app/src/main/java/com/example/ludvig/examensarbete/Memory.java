@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +20,7 @@ public class Memory {
 	private HashMap<HDVECTOR,Vector> map = new HashMap<HDVECTOR, Vector>();
 	private static Memory mem;
 	private static boolean instance = false;
-	private static ArrayList<Vector> exp_episodes;
+	private ArrayList<Vector> exp_episodes;
 	
 	
 	public static Memory getInstance() throws ClassNotFoundException, IOException{
@@ -75,14 +74,13 @@ public class Memory {
 	}
 	
 	public void loadPersistentMem(Context context) throws IOException, ClassNotFoundException{
-		if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())){
 			File f = new File(Environment.getExternalStorageDirectory().getPath(),"VSA_MEM");
 			FileInputStream fs = new FileInputStream(f);
 			ObjectInputStream ois = new ObjectInputStream(fs);
 			map = (HashMap<HDVECTOR, Vector>) ois.readObject();
 			ois.close();
 			fs.close();
-		}
+
 	}
 	
 	public void savePersistentExp(Context context) throws IOException{
@@ -98,14 +96,12 @@ public class Memory {
 	}
 	
 	public void loadPersistentExp(Context context) throws IOException, ClassNotFoundException{
-		if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())){
 			File f = new File(Environment.getExternalStorageDirectory().getPath(),"VSA_EXP");
 			FileInputStream fs = new FileInputStream(f);
 			ObjectInputStream ois = new ObjectInputStream(fs);
 			exp_episodes = (ArrayList<Vector>) ois.readObject();
 			ois.close();
 			fs.close();
-		}
 	}
 
 	public boolean hasKey(HDVECTOR key){

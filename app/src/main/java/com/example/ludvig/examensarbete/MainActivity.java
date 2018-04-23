@@ -99,20 +99,31 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         cameraView.setCvCameraViewListener(this);
 
         initGUI();
-        //File f = new File("/storage/MEM_EXP");
-        //Log.d(TAG,f.getAbsolutePath());
+
         try {
             Memory mem = Memory.getInstance();
             mem.loadPersistentMem(this);
             mem.loadPersistentExp(this);
-            String s = String.valueOf(VSA.hammingDist(mem.find(HDVECTOR.aboveBelow),mem.find(HDVECTOR.Cb)));
+            //mem.loadPersistentExp(this);
+            //mem.loadPersistentMem(this);
+            /*int i = 0;
+            while(i < 10){
+                Sign s1 = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
+                Node n = new Node(s1,s1,"ROOT");
+                n.addEpisodeToExperience(s1.getEpisodeVector());
+                i++;
+                Log.e("Mamma", "ROUND "+i +" TEST");
+            }
+            */
 
-            Toast.makeText(this,s, Toast.LENGTH_LONG).show();
-            Log.i("fdsa",s);
+
+            String s = String.valueOf(VSA.hammingDist(mem.find(HDVECTOR.Cr),mem.find(HDVECTOR.Cb)));
+
+            Log.i("Mamma","----> " +s);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            Log.e("Mamma","class not found", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("Mamma", "IOException", e);
         }
 
     }
