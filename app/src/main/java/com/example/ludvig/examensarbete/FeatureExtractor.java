@@ -2,12 +2,8 @@ package com.example.ludvig.examensarbete;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
-
-import junit.framework.Assert;
 
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -23,15 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-/**
- * Created by ludvig on 2018-04-04.
- */
 
 public class FeatureExtractor {
     private Mat hsv;
     private Mat warped;
     Memory mem;
-    Context context;
+
+    public enum COLOR {RED,GREEN,BLUE,YELLOW}
+    public enum SHAPE {SQUARE,CIRCLE,TRIANGLE}
+    public enum QUADRANT {TOPLEFT,TOPRIGHT,BOTTOMRIGHT,BOTTOMLEFT}
+
 
     private static final String TAG = "featureExtractor";
     public FeatureExtractor() throws IOException, ClassNotFoundException {
@@ -42,7 +39,6 @@ public class FeatureExtractor {
     }
 
     public Mat extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
-        //TODO ignore features without color?
         Mat[] signMat = findSign(img,lowerbound,upperbound, drawmode);
         Mat warped = signMat[2];
         Vector<Features> shapes = detectShape(warped,cannyLow,cannyHigh,epsilon);
@@ -53,27 +49,35 @@ public class FeatureExtractor {
             shape.quadrant = findQuadrants(warped,shape.centerPoint);
             Log.i(TAG,String.valueOf(shapes.size()));
             Log.i(TAG,shape.color + " " + shape.shape + " in " + shape.quadrant);
-            String s;
-            if(shape.color!= null){
-                s = String.valueOf(shape.color.charAt(0));
-
-            }else{
-                s = "";
+            String s = "";
+            switch (shape.color){
+                case RED:
+                    s = "R";
+                    break;
+                case GREEN:
+                    s="G";
+                    break;
+                case BLUE:
+                    s="B";
+                    break;
+                case YELLOW:
+                    s="Y";
+                    break;
             }
             switch(shape.quadrant){
-                case "Top left quadrant":
+                case TOPLEFT:
                     featureSign.topLeft = shape;
                     break;
-                case "Top right quadrant":
+                case TOPRIGHT:
                     featureSign.topRight = shape;
                     break;
-
-                case "Bottom left quadrant":
-                    featureSign.bottomLeft = shape;
-                    break;
-                case "Bottom right quadrant":
+                case BOTTOMRIGHT:
                     featureSign.bottomRight = shape;
                     break;
+                case BOTTOMLEFT:
+                    featureSign.bottomLeft = shape;
+                    break;
+
             }
 
             Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
@@ -142,23 +146,23 @@ public class FeatureExtractor {
         }
     }
     private HDVECTOR getShapeAndColorVector(Features feature){
-        if(feature.color == "blue"){
-            if(feature.shape == "Square"){
+        if(feature.color == COLOR.BLUE){
+            if(feature.shape == SHAPE.SQUARE){
                 return HDVECTOR.Sb;
-            }else if(feature.shape == "Triangle"){
+            }else if(feature.shape == SHAPE.TRIANGLE){
                 return HDVECTOR.Tb;
-            }else if(feature.shape == "Circle"){
+            }else if(feature.shape == SHAPE.CIRCLE){
                 return HDVECTOR.Cb;
             }
-        }else if(feature.color == "red"){
-            if(feature.shape == "Square"){
+        }else if(feature.color == COLOR.RED){
+            if(feature.shape == SHAPE.SQUARE){
                 return HDVECTOR.Sr;
-            }else if(feature.shape == "Triangle"){
+            }else if(feature.shape == SHAPE.TRIANGLE){
                 return HDVECTOR.Tr;
-            }else if(feature.shape == "Circle"){
+            }else if(feature.shape == SHAPE.CIRCLE){
                 return HDVECTOR.Cr;
             }
-        }
+        }//TODO add green and yellow...
         return null;
     }
 
@@ -189,21 +193,21 @@ public class FeatureExtractor {
     }
 
 
-    private String findQuadrants(Mat img,Point centerPoint){
+    private QUADRANT findQuadrants(Mat img,Point centerPoint){
         int width = img.cols();
         int height = img.rows();
 
         if(centerPoint.x < width / 2 && centerPoint.y < height/2){  //top left quadrant
-            return "Top left quadrant";
+            return QUADRANT.TOPLEFT;
         }
         else if(centerPoint.x > width / 2 && centerPoint.y < height/2){  //top right quadrant
-            return "Top right quadrant";
+            return QUADRANT.TOPRIGHT;
         }
         else if(centerPoint.x < width / 2 && centerPoint.y > height/2){     //bottom left quadrant
-            return "Bottom left quadrant";
+            return QUADRANT.BOTTOMLEFT;
         }
         else{                                                               //bottom right quadrant
-            return "Bottom right quadrant";
+            return QUADRANT.BOTTOMRIGHT;
         }
     }
 
@@ -211,18 +215,28 @@ public class FeatureExtractor {
         if(img.channels() < 3){     //img is empty
             return ;
         }
-        Scalar lower_blue = new Scalar(80,70,130);         //Scalar lower_blue = new Scalar(80,115,180);
-        Scalar upper_blue = new Scalar(150,255,255);
-        Scalar lower_red = new Scalar(150,30,180);
-        Scalar upper_red = new Scalar(180,255,255);
+        Scalar lower_blue = new Scalar(100,50,30);         //Scalar lower_blue = new Scalar(80,115,180);
+        Scalar upper_blue = new Scalar(255,255,255);
 
+        Scalar lower_red = new Scalar(0,50,30);
+        Scalar upper_red = new Scalar(20,255,255);
+
+        Scalar lower_yellow = new Scalar(20,50,30);
+        Scalar upper_yellow = new Scalar(40,255,255);
+
+        Scalar lower_green = new Scalar(40,50,30);
+        Scalar upper_green = new Scalar(90,255,255);
 
         Mat hsv = new Mat();
         Imgproc.cvtColor(img,hsv,Imgproc.COLOR_RGB2HSV);
         Mat blueMask = new Mat();
         Mat redMask = new Mat();
+        Mat greenMask = new Mat();
+        Mat yellowMask = new Mat();
         Core.inRange(hsv,lower_blue,upper_blue,blueMask);
         Core.inRange(hsv,lower_red,upper_red,redMask);
+        Core.inRange(hsv,lower_yellow,upper_yellow,yellowMask);
+        Core.inRange(hsv,lower_green,upper_green,greenMask);
 
 
 
@@ -239,11 +253,15 @@ public class FeatureExtractor {
                 Log.d("colorDet",i + "r" + String.valueOf(redMask.get(x,y)[0]));
 
             if(blueMask.get(x,y)!= null && blueMask.get(x,y)[0] > 0){
-                f.color = "blue";
+                f.color = COLOR.BLUE;
                 Log.d("colorDet", "Blue detected!");
             }else if(redMask.get(x,y)!= null && redMask.get(x,y)[0] > 0){
-                f.color = "red";
+                f.color = COLOR.RED;
                 Log.d("colorDet", "Red detected!");
+            }else if (yellowMask.get(x,y)!= null && yellowMask.get(x,y)[0] > 0){
+                f.color = COLOR.YELLOW;
+            }else if(greenMask.get(x,y)!= null && greenMask.get(x,y)[0] > 0){
+                f.color = COLOR.YELLOW;
             }else{
                 features.remove(i);     //TODO loop backwards and remove...
             }
@@ -262,7 +280,7 @@ public class FeatureExtractor {
         Imgproc.Canny(img, edges, cannyLow, cannyHigh);     //100, 300 cannyLow and High
         //Imgproc.blur(edges, edges, new Size(2, 2));
         Imgproc.findContours(edges, contours, hierarchy,
-                Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+                Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);        //TODO Retr external?
         //third argument -1 = draw all contours...
 
         //Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),2);
@@ -285,14 +303,14 @@ public class FeatureExtractor {
             }*/
             if(approxCurve.total() == 3) {
                 Features f = new Features();
-                f.shape = "Triangle";
+                f.shape = SHAPE.TRIANGLE;
                 f.shapeCount = 3;
                 f.centerPoint = new Point(centerX,centerY);
                 resultVector.add(f);
 
             }else if(approxCurve.total() == 4) {
                 Features f = new Features();
-                f.shape = "Square";
+                f.shape = SHAPE.SQUARE;
                 f.centerPoint = new Point(centerX,centerY);
                 f.shapeCount = 4;
 
@@ -300,7 +318,7 @@ public class FeatureExtractor {
 
             }else if(approxCurve.total() > 7) {
                 Features f = new Features();
-                f.shape = "Circle";
+                f.shape = SHAPE.CIRCLE;
                 f.shapeCount = (int)approxCurve.total();
                 f.centerPoint = new Point(centerX,centerY);
 
@@ -321,6 +339,7 @@ public class FeatureExtractor {
         Imgproc.morphologyEx(hsv, hsv,
                 Imgproc.MORPH_CLOSE,Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
                         new Size(7,7)) );
+
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(hsv, contours, hierarchy, Imgproc.RETR_LIST,
@@ -383,7 +402,7 @@ public class FeatureExtractor {
                         Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
             }
             //new result of size width and height
-            int borderOffset = 20;
+
             int width = calcWidth(corners);
             int height = calcHeight(corners);
             //int width = img.width();

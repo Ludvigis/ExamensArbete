@@ -3,9 +3,10 @@ package com.example.ludvig.examensarbete;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.Environment;
+
 import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -16,7 +17,7 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -25,10 +26,7 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
 import java.io.IOException;
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -103,6 +101,16 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         cameraView.setMaxFrameSize(800,480);
         cameraView.setVisibility(SurfaceView.VISIBLE);
         cameraView.setCvCameraViewListener(this);
+        cameraView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                LinearLayoutCompat menu = findViewById(R.id.menu_layout);
+                if(menu.getVisibility() == View.VISIBLE){
+                    toggleMenu();
+                }
+                return false;
+            }
+        });
 
         initGUI();
 
@@ -148,12 +156,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
-        /*Mat img = frame.rgba();
-        Mat edges = new Mat();
-        Imgproc.Canny(img,edges,cannyLowVal,cannyHighVal);
-        return edges;*/
         return featureExtractor.extractFeatures(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal),cannyLowVal,cannyHighVal,epsilonVal, drawMode);
-
     }
 
     @Override
@@ -181,6 +184,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
     }
+
+
 
     private void toggleMenu(){
         LinearLayoutCompat l = findViewById(R.id.menu_layout);
