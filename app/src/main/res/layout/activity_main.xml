@@ -23,6 +23,37 @@
         android:layout_alignParentRight="true"
         android:text="Menu" />
 
+    <android.support.v7.widget.LinearLayoutCompat
+        android:id="@+id/training_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="false">
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/left_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="Left"
+        />
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/capture_button"
+            android:text="Capture"
+        />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/right_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="Right"
+        />
+
+    </android.support.v7.widget.LinearLayoutCompat>
+    
+    
     <ScrollView
         android:layout_width="300dp"
         android:layout_height="match_parent"
@@ -43,6 +74,12 @@
 
             <Spinner
                 android:id="@+id/spinner_drawmode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible"
+                android:background="#ffffff"/>
+            <Spinner
+                android:id="@+id/spinner_appmode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="visible"

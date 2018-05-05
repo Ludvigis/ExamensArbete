@@ -99,7 +99,6 @@ public class FeatureExtractor {
             Node best = node.checkForBestRewardMatch();
             if(best!=null){
                 Log.d("ResultFeature",best.getName());
-
                 Imgproc.putText(signMat[0],best.getName(),new Point(signMat[0].width()/2,signMat[0].height() - 100),Core.FONT_HERSHEY_SIMPLEX,2.0,new Scalar(0,255,0),5);
             }
 
@@ -215,26 +214,37 @@ public class FeatureExtractor {
         if(img.channels() < 3){     //img is empty
             return ;
         }
-        Scalar lower_blue = new Scalar(100,50,30);         //Scalar lower_blue = new Scalar(80,115,180);
-        Scalar upper_blue = new Scalar(255,255,255);
+        Scalar lower_blue = new Scalar(95,50,30);         //Scalar lower_blue = new Scalar(80,115,180);
+        Scalar upper_blue = new Scalar(130,255,255);
 
         Scalar lower_red = new Scalar(0,50,30);
-        Scalar upper_red = new Scalar(20,255,255);
+        Scalar upper_red = new Scalar(10,255,255);
+        Scalar lower_red2 = new Scalar(170,50,30);
+        Scalar upper_red2 = new Scalar(180,255,255);
 
-        Scalar lower_yellow = new Scalar(20,50,30);
-        Scalar upper_yellow = new Scalar(40,255,255);
+
+        Scalar lower_yellow = new Scalar(20,50,30);         //TODO improve yellow range
+        Scalar upper_yellow = new Scalar(30,255,255);
 
         Scalar lower_green = new Scalar(40,50,30);
-        Scalar upper_green = new Scalar(90,255,255);
+        Scalar upper_green = new Scalar(70,255,255);
 
         Mat hsv = new Mat();
         Imgproc.cvtColor(img,hsv,Imgproc.COLOR_RGB2HSV);
         Mat blueMask = new Mat();
         Mat redMask = new Mat();
+        Mat redMask2 = new Mat();
         Mat greenMask = new Mat();
         Mat yellowMask = new Mat();
-        Core.inRange(hsv,lower_blue,upper_blue,blueMask);
+
+        //handle the hue wrap of red.
         Core.inRange(hsv,lower_red,upper_red,redMask);
+        Core.inRange(hsv,lower_red2,upper_red2,redMask2);
+        Core.bitwise_or(redMask,redMask2,redMask);
+
+        Core.inRange(hsv,lower_blue,upper_blue,blueMask);
+
+
         Core.inRange(hsv,lower_yellow,upper_yellow,yellowMask);
         Core.inRange(hsv,lower_green,upper_green,greenMask);
 
@@ -243,27 +253,27 @@ public class FeatureExtractor {
         for(int i = features.size()-1; i>=0; i--){
             Features f = features.get(i);
             Point centerPoint = f.centerPoint;
-            int x = (int)centerPoint.y; //TODO swap back x and y and change places in .get(x,y) to (y,x)
-            int y = (int)centerPoint.x;
+            int x = (int)centerPoint.x;
+            int y = (int)centerPoint.y;
 
             Log.i("colorDetP",centerPoint.toString());
-            if(blueMask.get(x,y)!= null)
-                Log.d("colorDet", i + "b" + String.valueOf(blueMask.get(x,y)[0]));
-            if(redMask.get(x,y)!= null)
-                Log.d("colorDet",i + "r" + String.valueOf(redMask.get(x,y)[0]));
+            if(blueMask.get(y,x)!= null)
+                Log.d("colorDet", i + "b" + String.valueOf(blueMask.get(y,x)[0]));
+            if(redMask.get(y,x)!= null)
+                Log.d("colorDet",i + "r" + String.valueOf(redMask.get(y,x)[0]));
 
-            if(blueMask.get(x,y)!= null && blueMask.get(x,y)[0] > 0){
+            if(blueMask.get(y,x)!= null && blueMask.get(y,x)[0] > 0){
                 f.color = COLOR.BLUE;
                 Log.d("colorDet", "Blue detected!");
-            }else if(redMask.get(x,y)!= null && redMask.get(x,y)[0] > 0){
+            }else if(redMask.get(y,x)!= null && redMask.get(y,x)[0] > 0){
                 f.color = COLOR.RED;
                 Log.d("colorDet", "Red detected!");
-            }else if (yellowMask.get(x,y)!= null && yellowMask.get(x,y)[0] > 0){
+            }else if (yellowMask.get(y,x)!= null && yellowMask.get(y,x)[0] > 0){
                 f.color = COLOR.YELLOW;
-            }else if(greenMask.get(x,y)!= null && greenMask.get(x,y)[0] > 0){
-                f.color = COLOR.YELLOW;
+            }else if(greenMask.get(y,x)!= null && greenMask.get(y,x)[0] > 0){
+                f.color = COLOR.GREEN;
             }else{
-                features.remove(i);     //TODO loop backwards and remove...
+                features.remove(i);
             }
 
         }
@@ -277,11 +287,10 @@ public class FeatureExtractor {
         Mat edges = new Mat();
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
-        Imgproc.Canny(img, edges, cannyLow, cannyHigh);     //100, 300 cannyLow and High
+        Imgproc.Canny(img, edges, cannyLow, cannyHigh);
         //Imgproc.blur(edges, edges, new Size(2, 2));
         Imgproc.findContours(edges, contours, hierarchy,
-                Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);        //TODO Retr external?
-        //third argument -1 = draw all contours...
+                Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
         //Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),2);
 
@@ -298,9 +307,6 @@ public class FeatureExtractor {
             Imgproc.approxPolyDP(curve, approxCurve, epsilon*
                     Imgproc.arcLength(curve, true), true);
 
-            /*if(approxCurve.total()>=3){
-                Imgproc.circle(img, new Point(centerX,centerY),1,new Scalar(0,255,0),5);
-            }*/
             if(approxCurve.total() == 3) {
                 Features f = new Features();
                 f.shape = SHAPE.TRIANGLE;
@@ -328,7 +334,7 @@ public class FeatureExtractor {
         return resultVector;
     }
 
-    public Mat[] findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {
+    public Mat[] findSign(Mat img , Scalar lowerBound, Scalar upperBound, DrawMode drawMode) {  //TODO fix error with drawing on same mat...
         //Mat warped = new Mat();
 
         Imgproc.cvtColor(img, hsv, Imgproc.COLOR_RGB2HSV);  //BGR OR RGB??
@@ -405,9 +411,6 @@ public class FeatureExtractor {
 
             int width = calcWidth(corners);
             int height = calcHeight(corners);
-            //int width = img.width();
-            //int height = img.height();
-
 
             Point topLeft = new Point(0,0);
             Point topRight = new Point(width,0);
@@ -418,9 +421,9 @@ public class FeatureExtractor {
             dimensionList.add(topRight);
             dimensionList.add(bottomRight);
             dimensionList.add(bottomLeft);
+
             Mat dimensions = Converters.vector_Point2f_to_Mat(dimensionList);
             Mat perspectiveTransform = Imgproc.getPerspectiveTransform(corners,dimensions);
-
 
             Imgproc.warpPerspective(img, warped, perspectiveTransform, new Size(width,height),Imgproc.INTER_CUBIC);
 

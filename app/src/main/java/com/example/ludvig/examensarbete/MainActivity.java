@@ -14,6 +14,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -33,6 +34,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     JavaCameraView cameraView;
     FeatureExtractor featureExtractor;
     Mat imgMat;
+
+    boolean hasCapturedImage = false;
+    Mat capturedImage;
     Button menuButton;
     int hLowVal;
     int sLowVal;
@@ -56,6 +60,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     Double epsilonVal;
 
     DrawMode drawMode = DrawMode.IMAGE;
+    AppMode appMode;
+
 
     private static final String TAG = "main_activity";
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -118,18 +124,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             Memory mem = Memory.getInstance();
             mem.loadPersistentMem(this);
             mem.loadPersistentExp(this);
-
-           /* Sign s = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
+            /*
+            Sign s = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
             Node n = new Node(s,s,"n");
             for(int i = 0; i < 10; i++){
                 n.addEpisodeToExperience(s.getEpisodeVector());
             }
             mem.savePersistentExp(this);
             mem.savePersistentMem(this);
-*
-*/
-
-
+            */
 
         } catch (ClassNotFoundException e) {
             Log.e(TAG,"class not found", e);
@@ -149,14 +152,33 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        imgMat = new Mat();
 
-        //create featureExtractor with width and height?
+        imgMat = new Mat();
+        capturedImage =  new Mat();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
-        return featureExtractor.extractFeatures(frame.rgba(),new Scalar(hLowVal,sLowVal,vLowVal),new Scalar(hHighVal,sHighVal,vHighVal),cannyLowVal,cannyHighVal,epsilonVal, drawMode);
+        imgMat = frame.rgba();
+        if(appMode == AppMode.TESTING) {
+            return featureExtractor.extractFeatures(imgMat, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+        }else  if (appMode == AppMode.TRAINING){
+            if(hasCapturedImage){
+                //do training on img...
+                // extractFeatures
+                // only show left right button if hasCapturedImage...
+                return capturedImage;
+            }else{
+                return imgMat;  //preview...
+            }
+
+
+        }else{
+            Log.e(TAG,"invalid appmode");
+            return null;//return frame.rgba();
+        }
+
+
     }
 
     @Override
@@ -191,7 +213,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         LinearLayoutCompat l = findViewById(R.id.menu_layout);
         if (l.getVisibility() == View.VISIBLE)
         {
-            l.setVisibility(View.INVISIBLE);
+            l.setVisibility(View.GONE);
         }
         else
         {
@@ -215,6 +237,34 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
             }
         });
+
+        //Populates spinner with different appmodes from AppMode enum...
+        final Spinner trainingSpinner = (Spinner) findViewById(R.id.spinner_appmode);
+        trainingSpinner.setAdapter(new ArrayAdapter<AppMode>(this,android.R.layout.simple_spinner_dropdown_item,AppMode.values()));
+        trainingSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                appMode = AppMode.valueOf(trainingSpinner.getSelectedItem().toString());
+                Log.i(TAG,appMode.toString());
+                LinearLayoutCompat l = findViewById(R.id.training_layout);
+
+                if(AppMode.valueOf(trainingSpinner.getSelectedItem().toString()) == AppMode.TRAINING){
+
+                    l.setVisibility(View.VISIBLE);
+                }else{
+
+                    l.setVisibility(View.GONE);
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+
+            }
+        });
+
+
 
         hLowText = findViewById(R.id.hLow_textView);
         sLowText = findViewById(R.id.sLow_textView);
@@ -400,9 +450,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         cannyLowVal = cLow.getProgress();
         cannyHighVal = cHigh.getProgress();
 
-
-        //epsilon
-
         SeekBar epsilon = findViewById(R.id.epsilon_seekBar);
         epsilonText = findViewById(R.id.epsilon_textView);
         epsilonText.setText(String.valueOf((double)epsilon.getProgress()/100));
@@ -424,7 +471,53 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             }
         });
         epsilonVal = (double)epsilon.getProgress() / 100;
+        Button capture = findViewById(R.id.capture_button);
+        Button left = findViewById(R.id.left_button);
+        Button right = findViewById(R.id.right_button);
 
+        capture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                hasCapturedImage = !hasCapturedImage;
+                capturedImage = imgMat.clone();
+                if(hasCapturedImage){
+                    capture.setText("Cancel");
+                    left.setVisibility(View.VISIBLE);
+                    right.setVisibility(View.VISIBLE);
+                }else{
+                    capture.setText("Capture");
+                    left.setVisibility(View.GONE);
+                    right.setVisibility(View.GONE);
+                }
+
+            }
+        });
+        left.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG,"Left");
+                //TODO training here
+                hasCapturedImage = false;
+                capture.setText("Capture");
+                left.setVisibility(View.GONE);
+                right.setVisibility(View.GONE);
+            }
+        });
+
+        right.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG,"right");
+                //TODO training here
+                hasCapturedImage = false;
+                capture.setText("Capture");
+                left.setVisibility(View.GONE);
+                right.setVisibility(View.GONE);
+            }
+        });
 
     }
 
