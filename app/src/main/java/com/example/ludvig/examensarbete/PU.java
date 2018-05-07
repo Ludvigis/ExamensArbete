@@ -121,7 +121,7 @@ public class PU {
 	}
 	
 	public DIR checkForBestMatch(Sign left,Sign Right) throws IOException{
-		if(left.nullCount >= 2 || Right.nullCount >=2){
+		if(left.nullCount >= 1 || Right.nullCount >=1){
 			return DIR.NONE;
 		}
 		Vector leftVec = binding(BasicEncoding(left),aem.find(HDVECTOR.LEFT));
@@ -135,7 +135,9 @@ public class PU {
 		
 		leftDist = hammingDist(binding(mappingVec,leftVec),aem.find(HDVECTOR.REWARD));
 		rightDist = hammingDist(binding(mappingVec,rightVec), aem.find(HDVECTOR.REWARD));
-		
+		if(leftDist > 0.43d && rightDist > 0.43d){
+			return DIR.NONE;
+		}
 		System.out.println("LEFT HAMMING DIST -> " + leftDist + "\nRIGHT HAMMING DIST -> "+ rightDist);
 		return leftDist < rightDist ? DIR.LEFT : DIR.RIGHT;
 	}
