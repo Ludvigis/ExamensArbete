@@ -539,6 +539,23 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             }
         });
 
+        Button saveButton = findViewById(R.id.save_button);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                featureExtractor.saveExp();
+                Toast.makeText(getBaseContext(),"Saved exp",Toast.LENGTH_SHORT).show();
+            }
+        });
+        Button loadButton = findViewById(R.id.load_button);
+        loadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                featureExtractor.loadExp();
+                Toast.makeText(getBaseContext(),"Loaded exp",Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
 

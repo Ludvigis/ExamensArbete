@@ -31,7 +31,7 @@
             android:id="@+id/shape_desc_layout"
             android:background="#000"
             android:alpha="0.5"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <TextView
                 android:id="@+id/detected_shapes"
@@ -46,7 +46,22 @@
 
 
 
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/shape_desc_layout">
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"/>
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/load_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Load"/>
 
+    </android.support.v7.widget.LinearLayoutCompat>
     <android.support.v7.widget.LinearLayoutCompat
         android:id="@+id/training_layout"
         android:layout_width="wrap_content"

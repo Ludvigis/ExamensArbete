@@ -172,8 +172,21 @@ public class FeatureExtractor {
     public void saveExp(){
         try {
             expMem.savePersistent();
+            entityMem.savePersistent();
         } catch (IOException e) {
             Log.e(TAG,"Unable to save exp",e);
+        }
+    }
+
+    public void loadExp(){
+        try {
+            expMem.loadPersistent();
+            entityMem.loadPersistent();
+
+        } catch (IOException e) {
+            Log.e(TAG,"unable to load exp",e);
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG,"unable to load exp",e);
         }
     }
 
