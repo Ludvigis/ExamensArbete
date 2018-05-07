@@ -61,7 +61,6 @@ public class FeatureExtractor {
         }
 
         Log.i("feMEM",entityMem.keysToString());
-
     }
 
     public MatSignTuple extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
@@ -124,7 +123,7 @@ public class FeatureExtractor {
 
             String str = "";
             str = shape.shapePos.toString();
-            Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
+            //Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
         }
         Sign signLeft = encodingBlock.createSignFromFeatureSign(featureSignLeft);
         Sign signRight = encodingBlock.createSignFromFeatureSign(featureSignRight);
