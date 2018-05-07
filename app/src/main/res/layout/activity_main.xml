@@ -23,12 +23,38 @@
         android:layout_alignParentRight="true"
         android:text="Menu" />
 
+
+
+        <android.support.v7.widget.LinearLayoutCompat
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/shape_desc_layout"
+            android:background="#000"
+            android:alpha="0.5"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/detected_shapes"
+                android:layout_marginLeft="15dp"
+                android:textColor="#fff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name:"
+                />
+
+        </android.support.v7.widget.LinearLayoutCompat>
+
+
+
+
     <android.support.v7.widget.LinearLayoutCompat
         android:id="@+id/training_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerInParent="false">
+
+
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/left_button"

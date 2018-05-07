@@ -31,19 +31,40 @@ public class FeatureExtractor {
     public enum COLOR {RED,GREEN,BLUE}
     public enum SHAPE {SQUARE,CIRCLE,TRIANGLE}
     public enum SHAPEPOSITION {LEFTSIGN_TOPLEFT,LEFTSIGN_TOPRIGHT,LEFTSIGN_BOTTOMRIGHT,LEFTSIGN_BOTTOMLEFT,RIGHTSIGN_TOPLEFT,RIGHTSIGN_TOPRIGHT,RIGHTSIGN_BOTTOMRIGHT,RIGHTSIGN_BOTTOMLEFT}
-
+    private Context context;
 
     private static final String TAG = "featureExtractor";
-    public FeatureExtractor() throws IOException, ClassNotFoundException {
-        hsv = new Mat();
-        warped = new Mat();
-        entityMem = new AEM(false);
-        expMem = new EM(false);
+    public FeatureExtractor(Context context) throws IOException, ClassNotFoundException {
+
+        entityMem = new AEM(false,context);
+
+        expMem = new EM(false,context);
         encodingBlock = new EB();
         procUnit = new PU(entityMem,expMem);
+
+        //expMem.savePersistent();
+        //entityMem.savePersistent();
+
+
+    }
+    public void init(){
+        hsv = new Mat();
+        warped = new Mat();
+        Log.i("feMEM",entityMem.keysToString());
+        try {
+            expMem.loadPersistent();
+            entityMem.loadPersistent();
+        } catch (IOException e) {
+            Log.e(TAG, "IO: "+ e.getMessage());
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "Class not found: "+ e.getMessage());
+        }
+
+        Log.i("feMEM",entityMem.keysToString());
+
     }
 
-    public Mat extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
+    public MatSignTuple extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
         Mat[] signMat = findSign(img,lowerbound,upperbound, drawmode);
         Mat warped = signMat[2];
         Vector<Features> shapes = detectShape(warped,cannyLow,cannyHigh,epsilon);
@@ -98,40 +119,54 @@ public class FeatureExtractor {
                     break;
             }
 
-            Sign signLeft = encodingBlock.createSignFromFeatureSign(featureSignLeft);
-            Sign signRight = encodingBlock.createSignFromFeatureSign(featureSignRight);
 
-            Log.i("FeatureExtractorSign",signLeft.toString());
-            Log.i("FeatureExtractorSign",signRight.toString());
+
+
             String str = "";
             str = shape.shapePos.toString();
             Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
         }
-
-
-
+        Sign signLeft = encodingBlock.createSignFromFeatureSign(featureSignLeft);
+        Sign signRight = encodingBlock.createSignFromFeatureSign(featureSignRight);
+        Log.i("FeatureExtractorSign",signLeft.toString());
+        Log.i("FeatureExtractorSign",signRight.toString());
+        Mat returnMat = img;
         switch (drawmode) {
             case IMAGE:
-                return signMat[0];
+                returnMat = signMat[0];
+                break;
+                //return signMat[0];
 
             case HSV:
-                return hsv;
+                returnMat = hsv;
+                break;
 
             case WARPED:
                 Imgproc.resize(warped,warped,img.size());
-                return warped;
+                returnMat = warped;
+                break;
 
-
-            default:
-                return img;
         }
 
-
+        return new MatSignTuple(returnMat,signLeft,signRight);
 
     }
 
-    public void train(DIR direction){
+    public void train(Sign sign,DIR direction){
 
+        try {
+            procUnit.SaveEncodingAndDirectionToExp(sign,direction);
+        } catch (IOException e) {
+            Log.e(TAG,"unable to save exp",e);
+        }
+    }
+
+    public void saveExp(){
+        try {
+            expMem.savePersistent();
+        } catch (IOException e) {
+            Log.e(TAG,"Unable to save exp",e);
+        }
     }
 
 
@@ -267,7 +302,6 @@ public class FeatureExtractor {
 
     }
 
-
     public Vector<Features> detectShape(Mat img, int cannyLow, int cannyHigh, double epsilon) {
         Vector<Features> resultVector = new Vector<Features>();
 
@@ -277,7 +311,7 @@ public class FeatureExtractor {
         Imgproc.Canny(img, edges, cannyLow, cannyHigh);
         //Imgproc.blur(edges, edges, new Size(2, 2));
         Imgproc.findContours(edges, contours, hierarchy,
-                Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+                Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
         //Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),2);
 
@@ -384,7 +418,7 @@ public class FeatureExtractor {
             cornerList.add(p4);
 
             Mat corners = sortCorners(cornerList);
-            if(drawMode == DrawMode.IMAGE) {
+            /*if(drawMode == DrawMode.IMAGE) {
                 Imgproc.putText(img, "Top L", new Point(corners.get(0, 0)),
                         Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
                 Imgproc.putText(img, "Top R", new Point(corners.get(1, 0)),
@@ -393,7 +427,7 @@ public class FeatureExtractor {
                         Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
                 Imgproc.putText(img, "Bot L", new Point(corners.get(3, 0)),
                         Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
-            }
+            }*/
             //new result of size width and height
 
             int width = calcWidth(corners);

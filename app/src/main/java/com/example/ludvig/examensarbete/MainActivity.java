@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     DrawMode drawMode = DrawMode.IMAGE;
     AppMode appMode;
-
+    MatSignTuple latestmatSignTuple;
 
     private static final String TAG = "main_activity";
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -73,13 +73,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
                     cameraView.enableView();
-                    try {
-                        featureExtractor = new FeatureExtractor();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                    featureExtractor.init();
                 } break;
                 default:
                 {
@@ -120,6 +114,14 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         });
 
         initGUI();
+        try {
+            featureExtractor = new FeatureExtractor(this);
+
+        } catch (IOException e) {
+            Log.e(TAG, "IO didn't work: "+ e.getMessage());
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "Class not found: "+ e.getMessage());
+        }
 
             /*
             Sign s = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
@@ -154,12 +156,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
         imgMat = frame.rgba();
         if(appMode == AppMode.TESTING) {
-            return featureExtractor.extractFeatures(imgMat, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+            MatSignTuple mst = featureExtractor.extractFeatures(imgMat, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+            return mst.img;
         }else  if (appMode == AppMode.TRAINING){
             if(hasCapturedImage){
                 //do training on img...
                 // extractFeatures
-                // only show left right button if hasCapturedImage...
+
                 return capturedImage;
             }else{
                 return imgMat;  //preview...
@@ -248,7 +251,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                     l.setVisibility(View.VISIBLE);
                 }else{
 
+                    featureExtractor.saveExp();
                     l.setVisibility(View.GONE);
+
+
                 }
 
             }
@@ -476,13 +482,20 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
                 hasCapturedImage = !hasCapturedImage;
                 capturedImage = imgMat.clone();
-                capturedImage = featureExtractor.extractFeatures(capturedImage, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+                MatSignTuple mst = featureExtractor.extractFeatures(capturedImage, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+                capturedImage = mst.img;
+                LinearLayoutCompat shapeDesc = findViewById(R.id.shape_desc_layout);
+                TextView txt = findViewById(R.id.detected_shapes);
+                latestmatSignTuple = mst;
+                txt.setText(mst.leftSign.toString() + mst.rightSign.toString());
                 if(hasCapturedImage){
                     capture.setText("Cancel");
+                    shapeDesc.setVisibility(View.VISIBLE);
                     left.setVisibility(View.VISIBLE);
                     right.setVisibility(View.VISIBLE);
                 }else{
                     capture.setText("Capture");
+                    shapeDesc.setVisibility(View.GONE);
                     left.setVisibility(View.GONE);
                     right.setVisibility(View.GONE);
                 }
@@ -499,7 +512,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
-
+                featureExtractor.train(latestmatSignTuple.leftSign,DIR.LEFT);
                 Toast.makeText(getBaseContext(),"Left clicked",Toast.LENGTH_SHORT).show();
             }
         });
@@ -514,7 +527,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
-
+                featureExtractor.train(latestmatSignTuple.rightSign,DIR.RIGHT);
                 Toast.makeText(getBaseContext(),"Right clicked",Toast.LENGTH_SHORT).show();
             }
         });

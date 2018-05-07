@@ -1,5 +1,8 @@
 package com.example.ludvig.examensarbete;
 
+import android.content.Context;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,14 +17,17 @@ import java.util.Set;
 public class AEM {
 
 	private HashMap<HDVECTOR,Vector> map = new HashMap<HDVECTOR, Vector>();
-	
-	public AEM(boolean loadPersistentVectors){
+	private Context context;
+	private static final String TAG = "AEM";
+	public AEM(boolean loadPersistentVectors,Context context){
+		this.context = context;
 		if(loadPersistentVectors){
 			try {
 				loadPersistent();
+
 			} catch (ClassNotFoundException | IOException e) {
-				System.out.println("Could not load persisten data");
-				e.printStackTrace();
+				System.out.println("Could not load persistent data");
+				Log.e(TAG, "Class not found: "+ e.getMessage());
 			}
 		}else{
 			for(HDVECTOR vec : HDVECTOR.values()){
@@ -61,8 +67,8 @@ public class AEM {
 	}
 	
 	public void savePersistent() throws IOException{
-		File f = new File("VSA_MEM");
-		FileOutputStream fs = new FileOutputStream(f);
+
+		FileOutputStream fs = context.openFileOutput("VSA_MEM",Context.MODE_PRIVATE);
 		ObjectOutputStream oos = new ObjectOutputStream(fs);
 		oos.writeObject(map);
 		oos.close();
@@ -72,7 +78,7 @@ public class AEM {
 	@SuppressWarnings("unchecked")
 	public void loadPersistent() throws IOException, ClassNotFoundException{
 		File f = new File("VSA_MEM");
-		FileInputStream fs = new FileInputStream(f);
+		FileInputStream fs = context.openFileInput(f.getName());
 		ObjectInputStream ois = new ObjectInputStream(fs);
 		map = (HashMap<HDVECTOR, Vector>) ois.readObject();
 		ois.close();
