@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import org.opencv.android.BaseLoaderCallback;
@@ -120,10 +121,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         initGUI();
 
-        try {
-            Memory mem = Memory.getInstance();
-            mem.loadPersistentMem(this);
-            mem.loadPersistentExp(this);
             /*
             Sign s = new Sign(mem,HDVECTOR.aboveBelow,HDVECTOR.Sr,HDVECTOR.Sb,HDVECTOR.same);
             Node n = new Node(s,s,"n");
@@ -134,11 +131,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             mem.savePersistentMem(this);
             */
 
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG,"class not found", e);
-        } catch (IOException e) {
-            Log.e(TAG, "IOException", e);
-        }
+
 
     }
 
@@ -213,10 +206,12 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         LinearLayoutCompat l = findViewById(R.id.menu_layout);
         if (l.getVisibility() == View.VISIBLE)
         {
+
             l.setVisibility(View.GONE);
         }
         else
         {
+
             l.setVisibility(View.VISIBLE);
         }
     }
@@ -481,6 +476,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
                 hasCapturedImage = !hasCapturedImage;
                 capturedImage = imgMat.clone();
+                capturedImage = featureExtractor.extractFeatures(capturedImage, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
                 if(hasCapturedImage){
                     capture.setText("Cancel");
                     left.setVisibility(View.VISIBLE);
@@ -503,6 +499,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
+
+                Toast.makeText(getBaseContext(),"Left clicked",Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -516,6 +514,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
+
+                Toast.makeText(getBaseContext(),"Right clicked",Toast.LENGTH_SHORT).show();
             }
         });
 

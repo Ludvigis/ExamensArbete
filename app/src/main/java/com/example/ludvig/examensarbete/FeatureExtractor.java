@@ -23,19 +23,24 @@ import java.util.Vector;
 public class FeatureExtractor {
     private Mat hsv;
     private Mat warped;
-    Memory mem;
+    AEM entityMem;
+    EM expMem;
+    EB encodingBlock;
+    PU procUnit;
 
-    public enum COLOR {RED,GREEN,BLUE,YELLOW}
+    public enum COLOR {RED,GREEN,BLUE}
     public enum SHAPE {SQUARE,CIRCLE,TRIANGLE}
-    public enum QUADRANT {TOPLEFT,TOPRIGHT,BOTTOMRIGHT,BOTTOMLEFT}
+    public enum SHAPEPOSITION {LEFTSIGN_TOPLEFT,LEFTSIGN_TOPRIGHT,LEFTSIGN_BOTTOMRIGHT,LEFTSIGN_BOTTOMLEFT,RIGHTSIGN_TOPLEFT,RIGHTSIGN_TOPRIGHT,RIGHTSIGN_BOTTOMRIGHT,RIGHTSIGN_BOTTOMLEFT}
 
 
     private static final String TAG = "featureExtractor";
     public FeatureExtractor() throws IOException, ClassNotFoundException {
         hsv = new Mat();
         warped = new Mat();
-        mem = Memory.getInstance();
-
+        entityMem = new AEM(false);
+        expMem = new EM(false);
+        encodingBlock = new EB();
+        procUnit = new PU(entityMem,expMem);
     }
 
     public Mat extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
@@ -43,12 +48,14 @@ public class FeatureExtractor {
         Mat warped = signMat[2];
         Vector<Features> shapes = detectShape(warped,cannyLow,cannyHigh,epsilon);
         detectColors(warped,shapes);
-        FeatureSign featureSign = new FeatureSign();
+        FeatureSign featureSignLeft = new FeatureSign();
+        FeatureSign featureSignRight = new FeatureSign();
+        Log.d(TAG,String.valueOf(shapes.size()));
         for(int i = 0; i<shapes.size();i++){
             Features shape = shapes.get(i);
-            shape.quadrant = findQuadrants(warped,shape.centerPoint);
-            Log.i(TAG,String.valueOf(shapes.size()));
-            Log.i(TAG,shape.color + " " + shape.shape + " in " + shape.quadrant);
+            shape.shapePos = findShapePos(warped,shape.centerPoint);
+
+            Log.d(TAG,shape.color + " " + shape.shape + " in " + shape.shapePos);
             String s = "";
             switch (shape.color){
                 case RED:
@@ -60,56 +67,47 @@ public class FeatureExtractor {
                 case BLUE:
                     s="B";
                     break;
-                case YELLOW:
+                /*case YELLOW:
                     s="Y";
+                    break;*/
+            }
+            switch(shape.shapePos){
+                case LEFTSIGN_TOPLEFT:
+                    featureSignLeft.topLeft = shape;
+                    break;
+                case LEFTSIGN_TOPRIGHT:
+                    featureSignLeft.topRight = shape;
+                    break;
+                case LEFTSIGN_BOTTOMRIGHT:
+                    featureSignLeft.bottomRight = shape;
+                    break;
+                case LEFTSIGN_BOTTOMLEFT:
+                    featureSignLeft.bottomLeft = shape;
+                    break;
+                case RIGHTSIGN_TOPLEFT:
+                    featureSignRight.topLeft = shape;
+                    break;
+                case RIGHTSIGN_TOPRIGHT:
+                    featureSignRight.topRight = shape;
+                    break;
+                case RIGHTSIGN_BOTTOMRIGHT:
+                    featureSignRight.bottomRight = shape;
+                    break;
+                case RIGHTSIGN_BOTTOMLEFT:
+                    featureSignRight.bottomLeft = shape;
                     break;
             }
-            switch(shape.quadrant){
-                case TOPLEFT:
-                    featureSign.topLeft = shape;
-                    break;
-                case TOPRIGHT:
-                    featureSign.topRight = shape;
-                    break;
-                case BOTTOMRIGHT:
-                    featureSign.bottomRight = shape;
-                    break;
-                case BOTTOMLEFT:
-                    featureSign.bottomLeft = shape;
-                    break;
 
-            }
+            Sign signLeft = encodingBlock.createSignFromFeatureSign(featureSignLeft);
+            Sign signRight = encodingBlock.createSignFromFeatureSign(featureSignRight);
 
+            Log.i("FeatureExtractorSign",signLeft.toString());
+            Log.i("FeatureExtractorSign",signRight.toString());
+            String str = "";
+            str = shape.shapePos.toString();
             Imgproc.putText(warped, s + String.valueOf(shape.shapeCount),shape.centerPoint,Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(0, 0, 255), 5);
         }
 
-        Sign signLeft = new Sign(mem);
-        Sign signRight = new Sign(mem);
-        getSameDifferent(signLeft,signRight,featureSign);
-        getAboveBelow(signLeft,signRight,featureSign);
-        getShapeVector(signLeft,signRight,featureSign);
-
-        Node node = new Node(signLeft,signRight,"Root");
-        Node node2 = new Node(signLeft,signRight,"left");
-        Node node3 = new Node(signLeft,signRight,"right");
-        node.setLeftPath(node2);
-        node.setRightPath(node3);
-
-        try {
-            Node best = node.checkForBestRewardMatch();
-            if(best!=null){
-                Log.d("ResultFeature",best.getName());
-                Imgproc.putText(signMat[0],best.getName(),new Point(signMat[0].width()/2,signMat[0].height() - 100),Core.FONT_HERSHEY_SIMPLEX,2.0,new Scalar(0,255,0),5);
-            }
-
-
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Log.d("signTest",signLeft.toString() + "  " + signRight.toString());
 
 
         switch (drawmode) {
@@ -132,82 +130,70 @@ public class FeatureExtractor {
 
     }
 
-    private void getShapeVector(Sign signLeft,Sign signRight, FeatureSign featureSign){
+    public void train(DIR direction){
 
-        if(featureSign.topLeft != null  && featureSign.bottomLeft != null){
-            signLeft.setFirstObj(getShapeAndColorVector(featureSign.topLeft));
-            signLeft.setSecObj(getShapeAndColorVector(featureSign.bottomLeft));
-        }
-
-        if(featureSign.topRight != null  && featureSign.bottomRight != null) {
-            signRight.setFirstObj(getShapeAndColorVector(featureSign.topRight));
-            signRight.setSecObj(getShapeAndColorVector(featureSign.bottomRight));
-        }
-    }
-    private HDVECTOR getShapeAndColorVector(Features feature){
-        if(feature.color == COLOR.BLUE){
-            if(feature.shape == SHAPE.SQUARE){
-                return HDVECTOR.Sb;
-            }else if(feature.shape == SHAPE.TRIANGLE){
-                return HDVECTOR.Tb;
-            }else if(feature.shape == SHAPE.CIRCLE){
-                return HDVECTOR.Cb;
-            }
-        }else if(feature.color == COLOR.RED){
-            if(feature.shape == SHAPE.SQUARE){
-                return HDVECTOR.Sr;
-            }else if(feature.shape == SHAPE.TRIANGLE){
-                return HDVECTOR.Tr;
-            }else if(feature.shape == SHAPE.CIRCLE){
-                return HDVECTOR.Cr;
-            }
-        }//TODO add green and yellow...
-        return null;
-    }
-
-    private void getAboveBelow(Sign signLeft,Sign signRight, FeatureSign featureSign){
-        if(featureSign.topLeft != null  && featureSign.bottomLeft != null){
-            signLeft.setRelation(HDVECTOR.aboveBelow);
-        }
-        if(featureSign.topRight != null  && featureSign.bottomRight != null) {
-            signRight.setRelation(HDVECTOR.aboveBelow);
-        }
-    }
-
-    private void getSameDifferent(Sign signLeft,Sign signRight, FeatureSign featureSign){
-        if(featureSign.topLeft != null  && featureSign.bottomLeft != null){
-            if(featureSign.topLeft.shape == featureSign.bottomLeft.shape){
-                signLeft.setSameDifferent(HDVECTOR.same);
-            }else{
-                signLeft.setSameDifferent(HDVECTOR.different);
-            }
-        }
-        if(featureSign.topRight != null  && featureSign.bottomRight != null) {
-            if (featureSign.topRight.shape == featureSign.bottomRight.shape) {
-                signRight.setSameDifferent(HDVECTOR.same);
-            } else {
-                signRight.setSameDifferent(HDVECTOR.different);
-            }
-        }
     }
 
 
-    private QUADRANT findQuadrants(Mat img,Point centerPoint){
+    private SHAPEPOSITION findShapePos(Mat img,Point centerPoint){
         int width = img.cols();
         int height = img.rows();
-
+        /*
         if(centerPoint.x < width / 2 && centerPoint.y < height/2){  //top left quadrant
-            return QUADRANT.TOPLEFT;
+            return SHAPEPOSITION.TOPLEFT;
         }
         else if(centerPoint.x > width / 2 && centerPoint.y < height/2){  //top right quadrant
-            return QUADRANT.TOPRIGHT;
+            return SHAPEPOSITION.TOPRIGHT;
         }
         else if(centerPoint.x < width / 2 && centerPoint.y > height/2){     //bottom left quadrant
-            return QUADRANT.BOTTOMLEFT;
+            return SHAPEPOSITION.BOTTOMLEFT;
         }
         else{                                                               //bottom right quadrant
-            return QUADRANT.BOTTOMRIGHT;
+            return SHAPEPOSITION.BOTTOMRIGHT;
         }
+        */
+
+        // LEFT SIGN
+        if(centerPoint.x <= width/2){
+            if( centerPoint.x <= width / 4 && centerPoint.y <= height/ 2 ){
+                return SHAPEPOSITION.LEFTSIGN_TOPLEFT;
+            }
+            else if(centerPoint.x > width / 4 && centerPoint.y <= height / 2){
+                return SHAPEPOSITION.LEFTSIGN_TOPRIGHT;
+            }
+            else if(centerPoint.x > width / 4 && centerPoint.y > height /2 ){
+                return SHAPEPOSITION.LEFTSIGN_BOTTOMRIGHT;
+            }
+            else if(centerPoint.x <= width/4 && centerPoint.y > height/2){
+                return SHAPEPOSITION.LEFTSIGN_BOTTOMLEFT;
+            }else{
+                Log.e(TAG,"position not found: left sign at " + centerPoint.x+":"+centerPoint.y);
+                return null;
+
+            }
+        }else{
+            // RIGHT SIGN
+            if(centerPoint.x <= 3*(width / 4) && centerPoint.y <= height/2){
+                return SHAPEPOSITION.RIGHTSIGN_TOPLEFT;
+            }
+            else if(centerPoint.x > 3*(width / 4) && centerPoint.y <= height/2){
+                return SHAPEPOSITION.RIGHTSIGN_TOPRIGHT;
+            }
+            else if(centerPoint.x >= 3*(width / 4) && centerPoint.y > height/2){
+                return SHAPEPOSITION.RIGHTSIGN_BOTTOMRIGHT;
+            }else if(centerPoint.x < 3*(width / 4) && centerPoint.y > height/2){
+                return SHAPEPOSITION.RIGHTSIGN_BOTTOMLEFT;
+            }else{
+                Log.e(TAG,"position not found: right sign at " + centerPoint.x+":"+centerPoint.y);
+                return null;
+            }
+        }
+
+
+
+
+
+
     }
 
     private void detectColors(Mat img, Vector<Features> features){
@@ -235,7 +221,7 @@ public class FeatureExtractor {
         Mat redMask = new Mat();
         Mat redMask2 = new Mat();
         Mat greenMask = new Mat();
-        Mat yellowMask = new Mat();
+        //Mat yellowMask = new Mat();
 
         //handle the hue wrap of red.
         Core.inRange(hsv,lower_red,upper_red,redMask);
@@ -245,7 +231,7 @@ public class FeatureExtractor {
         Core.inRange(hsv,lower_blue,upper_blue,blueMask);
 
 
-        Core.inRange(hsv,lower_yellow,upper_yellow,yellowMask);
+        //Core.inRange(hsv,lower_yellow,upper_yellow,yellowMask);
         Core.inRange(hsv,lower_green,upper_green,greenMask);
 
 
@@ -268,9 +254,10 @@ public class FeatureExtractor {
             }else if(redMask.get(y,x)!= null && redMask.get(y,x)[0] > 0){
                 f.color = COLOR.RED;
                 Log.d("colorDet", "Red detected!");
-            }else if (yellowMask.get(y,x)!= null && yellowMask.get(y,x)[0] > 0){
+            }/*else if (yellowMask.get(y,x)!= null && yellowMask.get(y,x)[0] > 0){
                 f.color = COLOR.YELLOW;
-            }else if(greenMask.get(y,x)!= null && greenMask.get(y,x)[0] > 0){
+            }*/
+            else if(greenMask.get(y,x)!= null && greenMask.get(y,x)[0] > 0){
                 f.color = COLOR.GREEN;
             }else{
                 features.remove(i);
@@ -290,7 +277,7 @@ public class FeatureExtractor {
         Imgproc.Canny(img, edges, cannyLow, cannyHigh);
         //Imgproc.blur(edges, edges, new Size(2, 2));
         Imgproc.findContours(edges, contours, hierarchy,
-                Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+                Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         //Imgproc.drawContours(img, contours, -1, new Scalar(255,0,0),2);
 
@@ -322,7 +309,7 @@ public class FeatureExtractor {
 
                 resultVector.add(f);
 
-            }else if(approxCurve.total() > 7) {
+            }else if(approxCurve.total() >= 7) {
                 Features f = new Features();
                 f.shape = SHAPE.CIRCLE;
                 f.shapeCount = (int)approxCurve.total();
