@@ -168,7 +168,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:max="255"
-                    android:progress="67" />
+                    android:progress="0" />
 
             </android.support.v7.widget.LinearLayoutCompat>
 
@@ -209,7 +209,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:max="255"
-                    android:progress="59" />
+                    android:progress="255" />
 
 
             </android.support.v7.widget.LinearLayoutCompat>
@@ -230,7 +230,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:max="255"
-                    android:progress="255" />
+                    android:progress="125" />
 
             </android.support.v7.widget.LinearLayoutCompat>
 

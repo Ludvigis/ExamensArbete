@@ -10,6 +10,7 @@ public class Sign {
 	private HDVECTOR top_left;
 	private HDVECTOR bottom_left;
 	private HDVECTOR bottom_right;
+	public int nullCount = 0;
 	
 	public Sign(){
 	}

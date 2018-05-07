@@ -21,21 +21,25 @@ public class EB {
 	public Sign createSignFromFeatureSign(FeatureSign featureSign){
 		Sign sign = new Sign();
 		if(featureSign.topLeft == null){
+			sign.nullCount++;
 			sign.setTopLeftShape(HDVECTOR.NULL);
 		}else{
 			sign.setTopLeftShape(featureSign.topLeft.getShapeAndColorVector());
 		}
 		if(featureSign.topRight == null){
+			sign.nullCount++;
 			sign.setTopRightShape(HDVECTOR.NULL);
 		}else{
 			sign.setTopRightShape(featureSign.topRight.getShapeAndColorVector());
 		}
 		if(featureSign.bottomRight == null){
+			sign.nullCount++;
 			sign.setBottomRightShape(HDVECTOR.NULL);
 		}else{
 			sign.setBottomRightShape(featureSign.bottomRight.getShapeAndColorVector());
 		}
 		if(featureSign.bottomLeft == null){
+			sign.nullCount++;
 			sign.setBottomLeftShape(HDVECTOR.NULL);
 		}else{
 			sign.setBottomLeftShape(featureSign.bottomLeft.getShapeAndColorVector());
