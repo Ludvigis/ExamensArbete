@@ -36,9 +36,9 @@ public class FeatureExtractor {
     private static final String TAG = "featureExtractor";
     public FeatureExtractor(Context context) throws IOException, ClassNotFoundException {
 
-        entityMem = new AEM(true,context);
+        entityMem = new AEM(false,context);
 
-        expMem = new EM(true,context);
+        expMem = new EM(false,context);
         encodingBlock = new EB();
         procUnit = new PU(entityMem,expMem);
 
