@@ -31,7 +31,7 @@
             android:id="@+id/shape_desc_layout"
             android:background="#000"
             android:alpha="0.5"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/detected_shapes"

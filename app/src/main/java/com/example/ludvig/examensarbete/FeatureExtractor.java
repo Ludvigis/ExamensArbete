@@ -50,17 +50,6 @@ public class FeatureExtractor {
     public void init(){
         hsv = new Mat();
         warped = new Mat();
-        Log.i("feMEM",entityMem.keysToString());
-        try {
-            expMem.loadPersistent();
-            entityMem.loadPersistent();
-        } catch (IOException e) {
-            Log.e(TAG, "IO: "+ e.getMessage());
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "Class not found: "+ e.getMessage());
-        }
-
-        Log.i("feMEM",entityMem.keysToString());
     }
 
     public MatSignTuple extractFeatures(Mat img, Scalar lowerbound, Scalar upperbound,int cannyLow, int cannyHigh, double epsilon,  DrawMode drawmode){
