@@ -156,7 +156,7 @@ public class FeatureExtractor {
         try {
             return procUnit.checkForBestMatch(left, right);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"could not find best match",e);
         }
         return null;
     }

@@ -123,6 +123,9 @@ public class PU {
 	public DIR checkForBestMatch(Sign left,Sign Right) throws IOException{
 		Vector leftVec = binding(BasicEncoding(left),aem.find(HDVECTOR.LEFT));
 		Vector rightVec = binding(BasicEncoding(Right), aem.find(HDVECTOR.RIGHT));
+		if(em.getExperienceVector().size() == 0){
+			return DIR.LEFT;
+		}
 		Vector mappingVec = bundling(em.getExperienceVector());
 		double leftDist = 1;
 		double rightDist = 1;

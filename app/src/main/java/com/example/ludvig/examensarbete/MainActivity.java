@@ -165,10 +165,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             return mst.img;
         }else  if (appMode == AppMode.TRAINING){
             if(hasCapturedImage){
-                //do training on img...
-                // extractFeatures
 
                 return capturedImage;
+
             }else{
                 return imgMat;  //preview...
             }
@@ -255,7 +254,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                     l.setVisibility(View.VISIBLE);
                 }else{
 
-                    featureExtractor.saveExp();
+                    //featureExtractor.saveExp();
                     l.setVisibility(View.GONE);
 
 
