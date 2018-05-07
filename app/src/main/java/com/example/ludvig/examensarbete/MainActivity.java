@@ -227,7 +227,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 drawMode = DrawMode.valueOf(mySpinner.getSelectedItem().toString());
-
             }
 
             @Override
@@ -512,6 +511,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
+                LinearLayoutCompat shapeDesc = findViewById(R.id.shape_desc_layout);
+                shapeDesc.setVisibility(View.GONE);
                 featureExtractor.train(latestmatSignTuple.leftSign,DIR.LEFT);
                 Toast.makeText(getBaseContext(),"Left clicked",Toast.LENGTH_SHORT).show();
             }
@@ -527,6 +528,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
                 right.setVisibility(View.GONE);
+                LinearLayoutCompat shapeDesc = findViewById(R.id.shape_desc_layout);
+                shapeDesc.setVisibility(View.GONE);
                 featureExtractor.train(latestmatSignTuple.rightSign,DIR.RIGHT);
                 Toast.makeText(getBaseContext(),"Right clicked",Toast.LENGTH_SHORT).show();
             }
