@@ -36,9 +36,9 @@ public class FeatureExtractor {
     private static final String TAG = "featureExtractor";
     public FeatureExtractor(Context context) throws IOException, ClassNotFoundException {
 
-        entityMem = new AEM(false,context);
+        entityMem = new AEM(true,context);
 
-        expMem = new EM(false,context);
+        expMem = new EM(true,context);
         encodingBlock = new EB();
         procUnit = new PU(entityMem,expMem);
 
@@ -150,6 +150,15 @@ public class FeatureExtractor {
 
         return new MatSignTuple(returnMat,signLeft,signRight);
 
+    }
+
+    public DIR checkForBest(Sign left,Sign right){
+        try {
+            return procUnit.checkForBestMatch(left, right);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void train(Sign sign,DIR direction){

@@ -26,8 +26,11 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 
@@ -157,6 +160,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         imgMat = frame.rgba();
         if(appMode == AppMode.TESTING) {
             MatSignTuple mst = featureExtractor.extractFeatures(imgMat, new Scalar(hLowVal, sLowVal, vLowVal), new Scalar(hHighVal, sHighVal, vHighVal), cannyLowVal, cannyHighVal, epsilonVal, drawMode);
+            DIR best = featureExtractor.checkForBest(mst.leftSign,mst.rightSign);
+            Imgproc.putText(mst.img,best.toString(),new Point(mst.img.width()/2,mst.img.height()-100), Core.FONT_HERSHEY_SIMPLEX,1.5,new Scalar(0,255,0));
             return mst.img;
         }else  if (appMode == AppMode.TRAINING){
             if(hasCapturedImage){
@@ -506,7 +511,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             @Override
             public void onClick(View view) {
                 Log.i(TAG,"Left");
-                //TODO training here
                 hasCapturedImage = false;
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
@@ -523,7 +527,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             @Override
             public void onClick(View view) {
                 Log.i(TAG,"right");
-                //TODO training here
                 hasCapturedImage = false;
                 capture.setText("Capture");
                 left.setVisibility(View.GONE);
